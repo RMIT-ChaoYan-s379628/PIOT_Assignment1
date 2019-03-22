@@ -30,14 +30,15 @@ def getSenseHatData():
 def logData(temp, humi):
     conn = sqlite3.connect('sensehat.db')
     curs = conn.cursor()
-    print(temp)
-    print(humi)
+   # print(temp)
+   # print(humi)
     curs.execute(
         "CREATE TABLE IF NOT EXISTS SENSEHAT_data(timestamp DATETIME, temp NUMERIC,humi NUMERIC)")
     curs.execute(
-        "INSERT INTO SENSEHAT_data values(datetime('now'), (?),(?))", (temp, humi,))
+        "INSERT INTO SENSEHAT_data values(datetime('now','localtime'), (?),(?))", (temp, humi,))
     conn.commit()
     conn.close()
+    notify(temp,humi)
 
 
 def notify(temp, humi):
@@ -47,20 +48,20 @@ def notify(temp, humi):
     curs.execute(
         "CREATE TABLE IF NOT EXISTS NOTIFICATION_data(timestamp DATETIME, count NUMERIC)")
     curs.execute(
-        "INSERT INTO NOTIFICATION_data ( timestamp, count ) SELECT * FROM( SELECT date( 'now' ), 0 ) AS tmp WHERE NOT EXISTS (SELECT timestamp FROM NOTIFICATION_data WHERE timestamp = date( 'now' ) ) LIMIT 1; ")
+        "INSERT INTO NOTIFICATION_data ( timestamp, count ) SELECT * FROM( SELECT date( 'now','localtime' ), 0 ) AS tmp WHERE NOT EXISTS (SELECT timestamp FROM NOTIFICATION_data WHERE timestamp = date( 'now','localtime' ) ) LIMIT 1; ")
     if (temp>max_tem or temp<min_tem or humi>max_hum or humi<min_hum):
         curs.execute(
-            "select count from NOTIFICATION_data where timestamp=date('now');")
+            "select count from NOTIFICATION_data where timestamp=date('now','localtime');")
         for row in curs.fetchall():
             if row[0] == 0:
                 print("ok")
                 pb = Pushbullet('o.p6OF0MXEo2huO3Ajf687fBUczZsTfvHV')
                 pb.push_note("Notification from Raspberry", "The data is out of range.")
                 curs.execute(
-                "update NOTIFICATION_data set count=1 where timestamp=date('now');")
+                "update NOTIFICATION_data set count=1 where timestamp=date('now','localtime');")
             else:
                 curs.execute(
-                "update NOTIFICATION_data set count=1 where timestamp=date('now');")
+                "update NOTIFICATION_data set count=1 where timestamp=date('now','localtime');")
     conn.commit()
     conn.close()
 
