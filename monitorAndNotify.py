@@ -38,6 +38,8 @@ def logData(temp, humi):
     conn.close()
     notify(temp, humi)
 
+# notify the unexpected temperature and humidity to user with the Pushbullet
+
 
 def notify(temp, humi):
     pb = Pushbullet('o.p6OF0MXEo2huO3Ajf687fBUczZsTfvHV')
