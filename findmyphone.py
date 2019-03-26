@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 import bluetooth
 import sqlite3
@@ -32,7 +33,7 @@ def search(user_name, device_name):
     conn = sqlite3.connect('sensehatTest.db')
     curs = conn.cursor()
     curs.execute(
-        "CREATE TABLE IF NOT EXISTS BLUETOOTH_data(timestamp DATETIME, macAddress STRING,count NUMERIC)")
+        "CREATE TABLE IF NOT EXISTS BLUETOOTH_data(macAddress_Date STRING,count NUMERIC)")
     while True:
         device_address = None
         dt = time.strftime("%a, %d %b %y %H:%M:%S", time.localtime())
@@ -53,20 +54,23 @@ def search(user_name, device_name):
             sense.clear()
             sense.show_message(
                 "Hi {}! Current Temp is {}*c and current Humi is {}".format(user_name, temp, humi), scroll_speed=0.05)
-            sql = '''INSERT INTO BLUETOOTH_data (date('now'),(?),0) SELECT*FROM (SELECT date('now'),(?),0) AS tmp WHERE NOT EXISTS (SELECT timestamp, macAddress, count FROM BLUETOOTH_data WHERE timestamp=date('now') AND macAddress=(?) AND count=0) LIMIT 1'''
+            date = time.strftime("%a, %d %b %y", time.localtime())
+            mac_address_date = date+mac_address
             curs.execute(
-                sql, (mac_address,))
-        # if (temp <= max_tem and temp >= min_tem and humi <= max_hum and humi >= min_hum):
-        #     curs.execute(
-        #         "select count from BLUETOOTH_data where timestamp=date('now') and macAddress=(?);",(mac_address))
-        #     for row in curs.fetchone():
-        #         if row[0] == 0:
-        #             push = pb.push_note(
-        #                 "This is the title", "This is the body")
-        #         curs.execute(
-        #             "update BLUETOOTH_data set count=1 where timestamp=date('now');")
-        # else:
-        #     print("Could not find target device nearby...")
+                "REPLACE INTO BLUETOOTH_data VALUES ((?),(0));", (mac_address_date,))
+            if (temp <= max_tem and temp >= min_tem and humi <= max_hum and humi >= min_hum):
+                curs.execute(
+                    "select * from BLUETOOTH_data where macAddress_Date=(?);", (mac_address_date,))
+                for row in curs.fetchall():
+                    if row[1] == 0:
+                        print(1)
+                       # push = pb.push_note(
+                        #    "This is the title", "This is the body")
+                        curs.execute(
+                            "update BLUETOOTH_data set count=1 where macAddress_Date=(?);", (mac_address_date,))
+            conn.commit()
+        else:
+            print("Could not find target device nearby...")
 
 
 # Execute program
