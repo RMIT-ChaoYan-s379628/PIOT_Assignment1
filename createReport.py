@@ -15,7 +15,11 @@ with open('report.csv', 'w') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     conn = sqlite3.connect('sensehat.db')
     cur = conn.cursor()
-    cur.execute("select strftime('%Y-%m-%d',timestamp) as date ,”AVG(temp) as temp_average, AVG(humi) as humi_average from SENSEHAT_data group by strftime('%Y-%m-%d', timestamp);")
+    sql = ("select strftime('%Y-%m-%d',timestamp) as date ,"
+           "AVG(temp) as temp_average, AVG(humi) as humi_average"
+           "from SENSEHAT_data group by strftime('%Y-%m-%d', timestamp);"
+           )
+    cur.execute(sql)
     writer.writeheader()
     for row in cur.fetchall():
         print(row[1])

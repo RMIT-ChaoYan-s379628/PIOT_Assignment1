@@ -33,7 +33,8 @@ def logData(temp, humi):
     curs.execute(
         "CREATE TABLE IF NOT EXISTS SENSEHAT_data(timestamp DATETIME, temp NUMERIC,humi NUMERIC)")
     curs.execute(
-        "INSERT INTO SENSEHAT_data values(datetime('now','localtime'), (?),(?))", (temp, humi,))
+        "INSERT INTO SENSEHAT_data values(datetime('now','localtime'), (?),(?))"
+        , (temp, humi,))
     conn.commit()
     conn.close()
     notify(temp, humi)
