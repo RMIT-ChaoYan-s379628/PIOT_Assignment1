@@ -30,11 +30,12 @@ def getSenseHatData():
 def logData(temp, humi):
     conn = sqlite3.connect('sensehat.db')
     curs = conn.cursor()
-    curs.execute(
-        "CREATE TABLE IF NOT EXISTS SENSEHAT_data(timestamp DATETIME, temp NUMERIC,humi NUMERIC)")
-    curs.execute(
-        "INSERT INTO SENSEHAT_data values(datetime('now','localtime'), (?),(?))"
-        , (temp, humi,))
+    sql_createTB = '''CREATE TABLE IF NOT EXISTS SENSEHAT_data
+    (timestamp DATETIME, temp NUMERIC,humi NUMERIC)'''
+    curs.execute(sql_createTB)
+    sql_insertData = '''INSERT INTO SENSEHAT_data values
+    (datetime('now','localtime'), (?),(?))'''
+    curs.execute(sql_insertData, (temp, humi,))
     conn.commit()
     conn.close()
     notify(temp, humi)
@@ -46,24 +47,29 @@ def notify(temp, humi):
     pb = Pushbullet('o.p6OF0MXEo2huO3Ajf687fBUczZsTfvHV')
     conn = sqlite3.connect('sensehat.db')
     curs = conn.cursor()
-    curs.execute(
-        "CREATE TABLE IF NOT EXISTS NOTIFICATION_data(timestamp DATETIME, count NUMERIC)")
-    curs.execute(
-        "INSERT INTO NOTIFICATION_data ( timestamp, count ) SELECT * FROM( SELECT date( 'now','localtime' ), 0 ) AS tmp WHERE NOT EXISTS (SELECT timestamp FROM NOTIFICATION_data WHERE timestamp = date( 'now','localtime' ) ) LIMIT 1; ")
+    sql_notify_createTB = '''CREATE TABLE IF NOT EXISTS NOTIFICATION_data
+    (timestamp DATETIME, count NUMERIC)'''
+    curs.execute(sql_notify_createTB)
+    sql_notify_insertData = '''INSERT INTO NOTIFICATION_data ( timestamp, count )
+    SELECT * FROM( SELECT date( 'now','localtime' ), 0 ) AS tmp
+    WHERE NOT EXISTS (SELECT timestamp FROM NOTIFICATION_data
+    WHERE timestamp = date( 'now','localtime' ) ) LIMIT 1; '''
+    curs.execute(sql_notify_insertData)
+    sql_update = '''update NOTIFICATION_data set count=1
+    where timestamp=date('now','localtime');'''
     if (temp > max_tem or temp < min_tem or humi > max_hum or humi < min_hum):
-        curs.execute(
-            "select count from NOTIFICATION_data where timestamp=date('now','localtime');")
+        sql_select = '''select count from NOTIFICATION_data
+        where timestamp=date('now','localtime');'''
+        curs.execute(sql_select)
         for row in curs.fetchall():
             if row[0] == 0:
                 print("ok")
                 pb = Pushbullet('o.p6OF0MXEo2huO3Ajf687fBUczZsTfvHV')
                 pb.push_note("Notification from Raspberry",
                              "The data is out of range.")
-                curs.execute(
-                    "update NOTIFICATION_data set count=1 where timestamp=date('now','localtime');")
+                curs.execute(sql_update)
             else:
-                curs.execute(
-                    "update NOTIFICATION_data set count=1 where timestamp=date('now','localtime');")
+                curs.execute(sql_update)
     conn.commit()
     conn.close()
 
