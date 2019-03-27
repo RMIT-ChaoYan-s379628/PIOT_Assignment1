@@ -14,11 +14,11 @@ min_hum = data['min_humidity']
 
 # get data from SenseHat sensor
 
+
 def getSenseHatData():
     sense = SenseHat()
     temp = sense.get_temperature()
     humi = sense.get_humidity()
-
     if temp is not None and humi is not None:
         temp = round(temp, 1)
         humi = round(humi, 1)
@@ -30,30 +30,46 @@ def getSenseHatData():
 def logData(temp, humi):
     conn = sqlite3.connect('sensehat.db')
     curs = conn.cursor()
-    print(temp)
-    print(humi)
-    curs.execute(
-        "CREATE TABLE IF NOT EXISTS SENSEHAT_data(timestamp DATETIME, temp NUMERIC,humi NUMERIC)")
-    curs.execute(
-        "INSERT INTO SENSEHAT_data values(datetime('now'), (?),(?))", (temp, humi,))
+    sql_createTB = '''CREATE TABLE IF NOT EXISTS SENSEHAT_data
+    (timestamp DATETIME, temp NUMERIC,humi NUMERIC)'''
+    curs.execute(sql_createTB)
+    sql_insertData = '''INSERT INTO SENSEHAT_data values
+    (datetime('now','localtime'), (?),(?))'''
+    curs.execute(sql_insertData, (temp, humi,))
     conn.commit()
     conn.close()
+    notify(temp, humi)
+
+# notify the unexpected temperature and humidity to user with the Pushbullet
 
 
 def notify(temp, humi):
     pb = Pushbullet('o.p6OF0MXEo2huO3Ajf687fBUczZsTfvHV')
     conn = sqlite3.connect('sensehat.db')
     curs = conn.cursor()
-    curs.execute(
-        "CREATE TABLE IF NOT EXISTS NOTIFICATION_data(timestamp DATETIME, count NUMERIC)")
-    curs.execute(
-        "INSERT INTO SENSEHAT_data values(date('now'), (0)")
-    if (temp>max_tem or temp<min_tem or humi>max_hum or humi<min_hum):
-        curs.execute("select * from NOTIFICATION_data where timestamp=date('now');")
-        for row in curs.fetchone():
-            if row[1]==0 :
-                push = pb.push_note("This is the title", "This is the body")
-        curs.execute("update NOTIFICATION_data set count=1 where timestamp=date('now');")
+    sql_notify_createTB = '''CREATE TABLE IF NOT EXISTS NOTIFICATION_data
+    (timestamp DATETIME, count NUMERIC)'''
+    curs.execute(sql_notify_createTB)
+    sql_notify_insertData = '''INSERT INTO NOTIFICATION_data ( timestamp, count )
+    SELECT * FROM( SELECT date( 'now','localtime' ), 0 ) AS tmp
+    WHERE NOT EXISTS (SELECT timestamp FROM NOTIFICATION_data
+    WHERE timestamp = date( 'now','localtime' ) ) LIMIT 1; '''
+    curs.execute(sql_notify_insertData)
+    sql_update = '''update NOTIFICATION_data set count=1
+    where timestamp=date('now','localtime');'''
+    if (temp > max_tem or temp < min_tem or humi > max_hum or humi < min_hum):
+        sql_select = '''select count from NOTIFICATION_data
+        where timestamp=date('now','localtime');'''
+        curs.execute(sql_select)
+        for row in curs.fetchall():
+            if row[0] == 0:
+                print("ok")
+                pb = Pushbullet('o.p6OF0MXEo2huO3Ajf687fBUczZsTfvHV')
+                pb.push_note("Notification from Raspberry",
+                             "The data is out of range.")
+                curs.execute(sql_update)
+            else:
+                curs.execute(sql_update)
     conn.commit()
     conn.close()
 
