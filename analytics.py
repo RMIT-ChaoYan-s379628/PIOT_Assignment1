@@ -1,30 +1,17 @@
 import sqlite3
 from pushbullet import Pushbullet
-from pyecharts import Bar
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdate
 import pandas as pd
 from dateutil.parser import parse
-import pyqtgraph as pg
-import pyqtgraph.exporters
-import numpy as np
 import pygal
-#import cairosvg
-import os
-from IPython.display import SVG
-from datetime import datetime, timedelta
-from IPython import display
 x_ticks = []
 y_temp = []
 x = []
 def check(count):
     conn = sqlite3.connect('sensehat.db')
     curs = conn.cursor()
-
-
     y=[]
-
-
 #    curs.execute(
 #       "select * from NOTIFICATION_data ;")
     curs.execute(
@@ -97,30 +84,6 @@ def check(count):
 
 
 
-def test_plotscene():
-    pg.setConfigOption('foreground', (255,255,255))
-    y_temp=[1,2,1]
-    x=['2018-03-01 18:01:22','2018-03-01 18:01:23','2018-03-01 18:01:25']
-    w = pg.GraphicsWindow()
-    p = w.addPlot()
-    #ax1.xaxis.set_major_formatter(mdate.DateFormatter('%Y-%m-%d %H:%M:%S'))  # 设置时间标签显示格式
-    p.plot(x,y_temp, pen={'color':'w'})
-    #p.setXRange(0,20)
-    #p.setYRange(-10,20)
-    app = pg.mkQApp()
-    app.processEvents()
-    ex = pyqtgraph.exporters.ImageExporter(w.scene())
-    ex.export(fileName="tem.png")
-def ttt():
-    date_chart = pygal.Line(x_label_rotation=20)
-    date_chart.x_labels = map(lambda d: d.strftime('%Y-%m-%d'), [
-        datetime(2013, 1, 2),
-        datetime(2013, 1, 12),
-        datetime(2013, 2, 2),
-        datetime(2013, 2, 22)])
-    date_chart.add("Visits", [300, 412, 823, 672])
-    date_chart.render_to_file('bar_chart.svg')
-    date_chart.render_to_png(filename='bar_chart.png')
 
 check(10)
 #test_plotscene()
