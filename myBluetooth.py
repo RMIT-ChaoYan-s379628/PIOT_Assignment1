@@ -62,7 +62,6 @@ def search(user_name, device_name):
                 if row[0] == 0:
                     send_notification_via_pushbullet(
                         "Notification from Raspberry: ", "The current temperature is {}*c and the current humidity is {}%".format(temp, humi))
-                    print("Push notification successfully.")
                     curs.execute(
                         "update BLUETOOTH_data set count=1 where macAddress_Date=(?);", (mac_address_date,))
         conn.commit()
@@ -77,7 +76,6 @@ def send_notification_via_pushbullet(title, body):
             body (str) : Body of text.
     """
     data_send = {"type": "note", "title": title, "body": body}
-
     resp = requests.post('https://api.pushbullet.com/v2/pushes', data=json.dumps(data_send),
                          headers={'Authorization': 'Bearer ' + ACCESS_TOKEN,
                                   'Content-Type': 'application/json'})
