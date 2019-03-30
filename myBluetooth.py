@@ -76,7 +76,6 @@ def send_notification_via_pushbullet(title, body):
             body (str) : Body of text.
     """
     data_send = {"type": "note", "title": title, "body": body}
-
     resp = requests.post('https://api.pushbullet.com/v2/pushes', data=json.dumps(data_send),
                          headers={'Authorization': 'Bearer ' + ACCESS_TOKEN,
                                   'Content-Type': 'application/json'})

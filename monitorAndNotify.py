@@ -46,7 +46,6 @@ def logData(temp, humi):
 
 
 def notify(temp, humi):
-    pb = Pushbullet('o.p6OF0MXEo2huO3Ajf687fBUczZsTfvHV')
     conn = sqlite3.connect('sensehat.db')
     curs = conn.cursor()
     sql_notify_createTB = '''CREATE TABLE IF NOT EXISTS NOTIFICATION_data
@@ -66,14 +65,17 @@ def notify(temp, humi):
         for row in curs.fetchall():
             if row[0] == 0:
                 print("ok")
-                pb = Pushbullet('o.p6OF0MXEo2huO3Ajf687fBUczZsTfvHV')
-                pb.push_note("Notification from Raspberry",
-                             "The data is out of range.")
+                send_notification_via_pushbullet(
+                    "Notification from Raspberry: ",
+                    "The data is out of range.")
                 curs.execute(sql_update)
             else:
                 curs.execute(sql_update)
     conn.commit()
     conn.close()
+
+# notify message to user via the Pushbullet
+
 
 def send_notification_via_pushbullet(title, body):
     """ Sending notification via pushbullet.
@@ -83,7 +85,8 @@ def send_notification_via_pushbullet(title, body):
     """
     data_send = {"type": "note", "title": title, "body": body}
 
-    resp = requests.post('https://api.pushbullet.com/v2/pushes', data=json.dumps(data_send),
+    resp = requests.post('https://api.pushbullet.com/v2/pushes',
+                         data=json.dumps(data_send),
                          headers={'Authorization': 'Bearer ' + ACCESS_TOKEN,
                                   'Content-Type': 'application/json'})
     if resp.status_code != 200:
@@ -92,6 +95,8 @@ def send_notification_via_pushbullet(title, body):
         print('complete sending')
 
 # main function
+
+
 def main():
     getSenseHatData()
 
